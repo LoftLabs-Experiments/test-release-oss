@@ -1,0 +1,42 @@
+/.idea
+/.devspace
+/kubeconfig.yaml
+.devspace/
+.DS_Store
+profile.out
+*.swp
+*.swo
+/testapp
+/testctl
+/zzz
+/cmd/testapp/__debug_bin
+/cmd/testctl/__debug_bin
+/release
+/cmd/testctl/cmd/charts/
+/pkg/embed/chart/test-release-oss-*
+/dist
+*.test
+tests/__snapshot__
+/licenses
+custom-gcl
+
+# Go specific
+*.log
+*.tmp
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+/build/
+/bin/
+
+# IDE
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.sublime-*
+
+# OS
+Thumbs.db

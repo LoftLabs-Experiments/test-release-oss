@@ -1,0 +1,58 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v*
+    paths:
+      - go.mod
+      - go.sum
+      - "**.go"
+      - ".github/workflows/lint.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  golangci:
+    name: lint
+    if: github.repository_owner == 'LoftLabs-Experiments' # do not run on forks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for prohibited test-release-oss import in config dir
+        run: |
+          #!/bin/bash
+          set -e
+
+          IMPORT="github.com/LoftLabs-Experiments/test-release-oss"
+          PATTERN="\"$IMPORT(\"|/)"
+          FOUND_FILES=$(find ./config -name "*.go" | xargs grep -l -E "$PATTERN" 2>/dev/null || true)
+
+          if [ -n "$FOUND_FILES" ]; then
+            echo "❌ ERROR: Prohibited import prefix '$IMPORT' found in:"
+            echo "$FOUND_FILES"
+            exit 1
+          fi
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+          cache: false
+
+      - name: Generate Embedded Helm Chart
+        run: |
+          go generate ./...
+
+      - name: Verify schema changes
+        run: |
+          echo "Schema verification skipped for test project"
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1

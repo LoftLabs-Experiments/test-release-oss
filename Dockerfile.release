@@ -1,0 +1,11 @@
+FROM alpine:3.22
+
+# install runtime dependencies
+RUN apk add --no-cache ca-certificates zstd tzdata
+
+# Set root path as working directory
+WORKDIR /
+
+COPY testapp .
+
+ENTRYPOINT ["/testapp", "start"]

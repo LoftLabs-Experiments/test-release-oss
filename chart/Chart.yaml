@@ -1,0 +1,12 @@
+apiVersion: v2
+name: test-release-oss
+description: A test Helm chart for workflow testing
+type: application
+version: 0.1.0
+appVersion: "dev"
+home: https://github.com/LoftLabs-Experiments/test-release-oss
+sources:
+- https://github.com/LoftLabs-Experiments/test-release-oss
+maintainers:
+- name: LoftLabs-Experiments
+  email: info@loft.sh

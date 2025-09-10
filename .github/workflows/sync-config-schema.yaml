@@ -1,0 +1,164 @@
+name: Sync Config Schema
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      releaseTag:
+        description: 'Release tag in form vX.Y.Z'
+        required: true
+        type: string
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.release.outputs.release_tag }}
+      is_alpha_version: ${{ steps.release.outputs.is_alpha_version }} # on alpha version we won't sync docs and config
+      is_stable_version: ${{ steps.release.outputs.is_stable_version }} # on stable versions we will sync config, and CI in test-release-oss-config will sync docs
+    steps:
+      # this is to support both manually trigger workflows, and automatically triggered on release creation
+      - name: Determine release tag
+        id: release
+        env:
+          MANUAL_TAG: ${{ inputs.releaseTag }}
+        run: |
+          if [[ -n "${MANUAL_TAG}" ]]; then
+            echo "Manually set tag: ${MANUAL_TAG}"
+            final_tag=${MANUAL_TAG}
+          else
+            echo "Tag from release event: ${{ github.event.release.tag_name }}"
+            final_tag=${{ github.event.release.tag_name }}
+          fi
+          echo "release_tag=${final_tag}" >> "$GITHUB_OUTPUT"
+          if [[ ${final_tag} == *"-alpha."* ]]; then
+            echo "is_alpha_version=true" >> "$GITHUB_OUTPUT"
+            echo "is_stable_version=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_alpha_version=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ ${final_tag} == *"-beta."* || ${final_tag} == *"-rc"* ]]; then
+            echo "is_stable_version=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_stable_version=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip sync on alpha
+        if: ${{ steps.release.outputs.is_alpha_version == 'true' }}
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: echo "skipping sync because release ${RELEASE_TAG} is alpha"
+
+      - name: Checkout repo
+        if: ${{ steps.release.outputs.is_alpha_version == 'false' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: 'true'
+          ref: 'refs/tags/${{ steps.release.outputs.release_tag }}'
+
+      - name: Configure git
+        if: ${{ steps.release.outputs.is_alpha_version == 'false' }}
+        run: |
+          git config --global url.https://"$GH_ACCESS_TOKEN"@github.com/.insteadOf https://github.com/
+          # set git info
+          git config --global user.name "Loft Bot"
+          git config --global user.email 'loft-bot@users.noreply.github.com'
+        env:
+          GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+
+      - name: Set up Go
+        if: ${{ steps.release.outputs.is_alpha_version == 'false' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Update main docs version on beta or rc versions
+        # update docs "main" version only on beta or -rc
+        if: ${{ steps.release.outputs.is_stable_version == 'false' && steps.release.outputs.is_alpha_version == 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: |
+          # clone test-release-oss-config and test-release-oss-docs
+          git clone --single-branch https://github.com/LoftLabs-Experiments/test-release-oss-docs.git
+          git clone --single-branch https://github.com/LoftLabs-Experiments/test-release-oss-config.git
+
+          # generate test-release-oss.schema.json based on the current platform.schema.json in test-release-oss-config
+          # and values.schema.json from alpha / beta release
+          cp chart/values.schema.json test-release-oss-config/values.schema.json
+          cd test-release-oss-config/
+          go mod tidy
+          go mod vendor
+
+          go run ./hack/main.go
+
+          # copy generated test-release-oss.schema.json to the docs
+          cd ../
+          mkdir -p test-release-oss-docs/configsrc/test-release-oss/main/
+          cp config/values.yaml test-release-oss-docs/configsrc/test-release-oss/main/default_values.yaml
+          cp test-release-oss-config/test-release-oss.schema.json test-release-oss-docs/configsrc/test-release-oss/main/test-release-oss.schema.json
+
+          # generate vCluster partials in docs
+          cd test-release-oss-docs/
+
+          branch_name="generate-partials-for-main"
+          git switch -c ${branch_name}
+
+          # generate test-release-oss partials for main version
+          go mod tidy
+          go mod vendor
+          go run hack/test-release-oss/partials/main.go "configsrc/test-release-oss/main" "test-release-oss/_partials/config"
+
+          # set git info
+          git config --global user.name "Loft Bot"
+          git config --global user.email 'loft-bot@users.noreply.github.com'
+
+          git add --all
+
+          # if there are no changes, exit early
+          if git diff-index --quiet HEAD --; then
+            exit 0
+          fi
+          echo "Changes detected"
+
+          # create a PR in test-release-oss-docs with generated partials (disabled for test repo)
+          git commit -m "chore: generate test-release-oss partials for main version based on values.schema.json in test-release-oss ${RELEASE_TAG}"
+          git push -u origin -f ${branch_name}
+          gh pr create --fill --head ${branch_name}
+
+
+      - name: Update test-release-oss schema in test-release-oss-config
+        # update only on beta, -rc and stable versions
+        if: ${{ steps.release.outputs.is_alpha_version == 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: |
+          cd ../test-release-oss-config/
+          mkdir -p test-release-oss-config/config
+          # git clone --single-branch https://github.com/loft-sh/test-release-oss-config.git
+          # copy generated schema from test-release-oss chart values to test-release-oss-config
+          cp chart/values.schema.json test-release-oss-config/values.schema.json
+          cp -R config/. test-release-oss-config/config/
+
+          cd test-release-oss-config
+
+          # We have to replace our config dependency so that we do not introduce test-release-oss as a whole as transitive dependecy.
+          find ./config/legacyconfig -type f -exec sed -i "s#github.com/LoftLabs-Experiments/test-release-oss/config#github.com/LoftLabs-Experiments/test-release-oss-config/config#g" {} +
+
+          # Align deps, if there have been any relevant changes in test-release-oss.
+          go mod tidy
+          go mod vendor
+
+          git add --all
+
+          # if there are no changes, exit early
+          if git diff-index --quiet HEAD --; then
+            exit 0
+          fi
+          echo "Changes detected"
+
+          # commit changes
+          git commit -m "chore: sync config/*.go and values.schema.json to test-release-oss version ${RELEASE_TAG}"
+          git push -u origin -f main
+          echo "test-release-oss-config values.schema.json updated to the version ${RELEASE_TAG}"

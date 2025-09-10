@@ -1,0 +1,16 @@
+# Configuration values for test-release-oss
+app:
+  name: test-release-oss
+  version: dev
+  port: 8080
+  environment: development
+
+features:
+  healthcheck: true
+  metrics: false
+  logging: true
+
+server:
+  timeout: 30s
+  readTimeout: 10s
+  writeTimeout: 10s

@@ -1,0 +1,33 @@
+# Build program
+FROM golang:1.24 AS builder
+
+WORKDIR /testctl-dev
+ARG TARGETOS
+ARG TARGETARCH
+ARG BUILD_VERSION=dev
+
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+
+# Copy the go source
+COPY cmd/testctl cmd/testctl
+COPY pkg/ pkg/
+
+ENV GO111MODULE=on
+
+# Build cmd
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} GO111MODULE=on go build -ldflags "-X github.com/LoftLabs-Experiments/test-release-oss/pkg/telemetry.SyncerVersion=$BUILD_VERSION" -o /testctl cmd/testctl/main.go
+
+# we use alpine for easier debugging
+FROM alpine:3.22
+
+# install runtime dependencies
+RUN apk add --no-cache ca-certificates
+
+# Set root path as working directory
+WORKDIR /
+
+COPY --from=builder /testctl .
+
+ENTRYPOINT ["/testctl"]

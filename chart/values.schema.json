@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Test Release OSS Chart Values",
+  "description": "Schema for test-release-oss Helm chart values",
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of replicas"
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "default": "ghcr.io/loftlabs-experiments/test-release-oss"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "default": "IfNotPresent",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        },
+        "tag": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "default": "test-release-oss"
+        },
+        "environment": {
+          "type": "string",
+          "default": "production"
+        },
+        "port": {
+          "type": "integer",
+          "default": 8080
+        }
+      }
+    }
+  }
+}

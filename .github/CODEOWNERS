@@ -1,0 +1,53 @@
+# Keep the entries sorted and optionally grouped.
+
+* @loft-sh/eng-dev-vcluster-platform
+
+/.github/workflows/backport.yaml @Piotr1215
+/.github/workflows/e2e.yaml @FabianKramm
+/.github/workflows/e2e.yaml @loft-sh/eng-qa
+/.github/workflows/release.yaml @FabianKramm
+/.github/workflows/ @Piotr1215 @sydorovdmytro
+
+/chart/ @FabianKramm @hidalgopl @zerbitx
+
+/cmd/vcluster/ @FabianKramm @hidalgopl @zerbitx @lizardruss
+/cmd/vclusterctl/ @johannesfrey @lizardruss
+
+/config/ @FabianKramm @hidalgopl @zerbitx @lizardruss
+
+/docs/ @loft-sh/Eng-Docs-Admin
+
+/test/ @loft-sh/eng-qa @loft-sh/eng-dev-vcluster-platform
+
+/hack/email/ @zerbitx
+
+/pkg/authentication/ @FabianKramm
+/pkg/authorization/ @FabianKramm
+
+/pkg/cli/ @FabianKramm @hidalgopl @johannesfrey @zerbitx @lizardruss
+
+/pkg/config/ @FabianKramm @hidalgopl @johannesfrey
+/pkg/config/config.go @FabianKramm @lizardruss
+
+/pkg/controllers/k8sdefaultendpoint/ @FabianKramm
+/pkg/controllers/register.go @FabianKramm
+/pkg/controllers/resources/*/from_host_syncer*.go @hidalgopl
+/pkg/controllers/resources/configmaps/ @FabianKramm
+/pkg/controllers/resources/endpoints/ @FabianKramm
+/pkg/controllers/resources/events/ @FabianKramm
+/pkg/controllers/resources/pods/ @FabianKramm
+/pkg/controllers/resources/secrets/ @FabianKramm
+/pkg/controllers/resources/services/ @FabianKramm @zerbitx
+
+/pkg/k8s/ @FabianKramm
+/pkg/mappings/ @FabianKramm
+/pkg/platform/ @FabianKramm @johannesfrey @zerbitx
+/pkg/plugin/ @FabianKramm
+/pkg/server/ @FabianKramm
+/pkg/setup/ @FabianKramm @hidalgopl
+/pkg/syncer/ @FabianKramm @hidalgopl @lizardruss
+/pkg/util/portforward/ @FabianKramm @lizardruss
+/pkg/util/servicecidr/ @FabianKramm @lizardruss
+/pkg/util/translate/ @FabianKramm
+
+netlify.toml @loft-sh/Eng-Docs-Admin
