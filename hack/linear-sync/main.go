@@ -19,7 +19,7 @@ func main() {
 	// Simulate linear sync functionality for test repository
 	fmt.Printf("Linear sync disabled for test repository (would process release: %s)\n", releaseTag)
 
-	// In the real vcluster, this would:
+	// In a real application, this would:
 	// 1. Connect to Linear API
 	// 2. Find issues fixed in this release
 	// 3. Update Linear issues with release information

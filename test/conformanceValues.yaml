@@ -28,7 +28,7 @@ controlPlane:
       podManagementPolicy: OrderedReady
     image:
       registry: ""
-      repository: ghcr.io/loft-sh/loft-enterprise/vcluster
+      repository: ghcr.io/loftlabs-experiments/test-release-oss
       tag: ""
     env:
       - name: DEBUG

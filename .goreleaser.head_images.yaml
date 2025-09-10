@@ -7,7 +7,7 @@ before:
     - 'echo "Building head images for {{ .Env.CI_BRANCH }} branch"'
 
 builds:
-  - id: vcluster
+  - id: testapp
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -16,8 +16,8 @@ builds:
     goarch:
       - amd64
       - arm64
-    binary: vcluster
-    main: ./cmd/vcluster
+    binary: testapp
+    main: ./cmd/testapp
     dir: .
     flags:
       - -trimpath

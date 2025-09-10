@@ -1,6 +1,6 @@
 # Test Release OSS
 
-A dummy test application for testing GitHub workflows and CI/CD pipelines. This project is designed to replicate the workflow structure of [vcluster](https://github.com/loft-sh/vcluster) for testing purposes.
+A dummy test application for testing GitHub workflows and CI/CD pipelines. This project is designed to test complex CI/CD workflows in a controlled environment.
 
 ## Overview
 
